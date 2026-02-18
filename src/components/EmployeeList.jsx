@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 const EmployeeList = () => {
 
     const [employees, setEmployees] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const navigator = useNavigate();
 
@@ -47,6 +48,15 @@ const EmployeeList = () => {
             <h1 className='text-center'>Employee List</h1>
             <br />
             <button type='button' className="btn btn-secondary" onClick={addNewEmployee}>Add Employee</button>
+
+            <br /><br />
+            <input
+                type="text"
+                placeholder="Search employee..."
+                className="form-control mb-3"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+            />
             <table className="table table-striped">
                 <thead>
                     <tr>
@@ -61,31 +71,38 @@ const EmployeeList = () => {
 
                 <tbody>
                     {
-                        employees.map(employee =>
-                            <tr key={employee.id}>
-                                <td>{employee.id}</td>
-                                <td>{employee.firstName}</td>
-                                <td>{employee.lastName}</td>
-                                <td>{employee.email}</td>
-                                <td>{employee.salary}</td>
-                                <td>
-                                    <button
-                                        type='button'
-                                        className='btn  btn-outline-primary  me-2'
-                                        onClick={() => updateEmployeeInfo(employee.id)}
-                                    >Update
-                                    </button>
+                        employees
+                            .filter(employee =>
+                                employee.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                employee.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                employee.email.toLowerCase().includes(searchTerm.toLowerCase())
+                            )
+                            .map(employee =>
+                                <tr key={employee.id}>
+                                    <td>{employee.id}</td>
+                                    <td>{employee.firstName}</td>
+                                    <td>{employee.lastName}</td>
+                                    <td>{employee.email}</td>
+                                    <td>{employee.salary}</td>
+                                    <td>
+                                        <button
+                                            type='button'
+                                            className='btn btn-outline-primary me-2'
+                                            onClick={() => updateEmployeeInfo(employee.id)}
+                                        >
+                                            Update
+                                        </button>
 
-                                    <button
-                                        type='button'
-                                        className='btn btn-outline-danger'
-                                        onClick={() => removeEmployee(employee.id)}
-                                    >
-                                        Delete
-                                    </button>
-                                </td>
-
-                            </tr>)
+                                        <button
+                                            type='button'
+                                            className='btn btn-outline-danger'
+                                            onClick={() => removeEmployee(employee.id)}
+                                        >
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            )
                     }
                 </tbody>
             </table>

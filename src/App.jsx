@@ -8,6 +8,7 @@ import CreateEmployee from './components/CreateEmployee'
 import Header from './components/Header'
 import UpdateEmployee from './components/UpdateEmployee'
 import Footer from './components/Footer'
+import Home from './components/Home'
 
 
 function App() {
@@ -19,7 +20,7 @@ function App() {
         <Header />
 
         <Routes>
-          <Route path='/' element={<EmployeeList />}></Route>
+          <Route path='/' element={<Home />}></Route>
           <Route path='/employees' element={<EmployeeList />}></Route>
           <Route path='/add-employee' element={<CreateEmployee />}></Route>
           <Route path='/update-employee/:id' element={<UpdateEmployee />}></Route>

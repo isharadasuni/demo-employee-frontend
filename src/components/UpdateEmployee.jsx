@@ -1,148 +1,126 @@
 import React, { useState, useEffect } from 'react'
-import { getAllEmployees, getEmployees, updateEmployeeDetails } from '../services/EmployeeService';
+import { getEmployees, getAllEmployees, updateEmployeeDetails } from '../services/EmployeeService';
 import { useNavigate, useParams } from 'react-router-dom';
-
 
 const UpdateEmployee = () => {
 
-    const [firstName, setFirstName] = useState('')
-    const [lastName, setLastName] = useState('')
-    const [email, setEmail] = useState('')
-    const [salary, setSalary] = useState('')
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [email, setEmail] = useState('');
+    const [salary, setSalary] = useState('');
 
-    const navigator = useNavigate()
-    const { id } = useParams();
-    const [employees, setEmployees] = useState([])
+    const [allEmployees, setAllEmployees] = useState([]);
     const [errors, setErrors] = useState({});
 
-    useEffect(() => {
-        if (id) {
-            getEmployees(id).then((response) => {
-                setFirstName(response.data.firstName);
-                setLastName(response.data.lastName);
-                setEmail(response.data.email);
-                setSalary(response.data.salary);
+    const navigator = useNavigate();
+    const { id } = useParams();
 
-            }).catch(error => {
-                console.error(error);
-            })
-        }
-    }, [id])
-
-    // Fetch employees on mount
+    // Fetch all employees once for validation
     useEffect(() => {
         getAllEmployees()
-            .then(res => setEmployees(res.data))
-            .catch(err => console.error("Failed to fetch employees:", err))
-    }, [])
+            .then(res => setAllEmployees(res.data))
+            .catch(err => console.error(err));
+    }, []);
 
-
-    function editEmployee(e) {
-        e.preventDefault();
-
-        if (validationFrom()) {
-            const employee = { firstName, lastName, email, salary }
-            console.log(employee);
-
-            updateEmployeeDetails(id, employee).then((reponse) => {
-                console.log(reponse.data);
-                navigator('/employees')
-            }).catch(error => {
-                console.error(error);
-            })
+    // Fetch current employee for pre-filling
+    useEffect(() => {
+        if (id) {
+            getEmployees(id)
+                .then(response => {
+                    const emp = response.data;
+                    setFirstName(emp.firstName);
+                    setLastName(emp.lastName);
+                    setEmail(emp.email);
+                    setSalary(emp.salary);
+                })
+                .catch(error => console.error(error));
         }
-    }
+    }, [id]);
 
-
-    function validationFrom() {
+    // Validation
+    const validateForm = () => {
+        const errorsCopy = {};
         let valid = true;
 
-        const errorsCopy = { ...errors }
-
-        if (firstName.trim()) {
-            errorsCopy.firstName = '';
-        } else {
-            errorsCopy.firstName = 'First Name is required';
-            valid = false;
-        }
-
-        if (lastName.trim()) {
-            errorsCopy.lastName = '';
-        } else {
-            errorsCopy.lastName = 'Last Name is required';
-            valid = false;
-        }
-
-        if (salary.toString().trim()) {
-            errorsCopy.salary = '';
-        } else {
-            errorsCopy.salary = 'Salary is required';
-            valid = false;
-        }
-
-
-
-        // email
+        if (!firstName.trim()) { errorsCopy.firstName = 'First Name is required'; valid = false; }
+        if (!lastName.trim()) { errorsCopy.lastName = 'Last Name is required'; valid = false; }
         if (!email.trim()) { errorsCopy.email = 'Email is required'; valid = false; }
         else {
-            const duplicate = employees.some(emp => emp.email === email && (!id || emp.id !== Number(id)));
-
+            const duplicate = allEmployees.some(emp => emp.email === email && emp.id !== Number(id));
             if (duplicate) { errorsCopy.email = 'Email already exists'; valid = false; }
-            else errorsCopy.email = '';
         }
 
+        if (salary === '' || isNaN(salary)) { errorsCopy.salary = 'Salary is required and must be a number'; valid = false; }
 
         setErrors(errorsCopy);
         return valid;
-    }
+    };
 
+    const editEmployee = (e) => {
+        e.preventDefault();
+
+        if (validateForm()) {
+            const employee = {
+                firstName,
+                lastName,
+                email,
+                salary: Number(salary)
+            };
+
+            updateEmployeeDetails(id, employee)
+                .then(() => navigator('/employees'))
+                .catch(err => console.error(err));
+        }
+    };
 
     return (
         <div className='container'>
             <div className='row'>
-                <div className='card col-md-6 offset-md-3 offset-md-3'>
-                    <h1>Update Employee</h1>
+                <div className='card col-md-6 offset-md-3 mt-5 shadow'>
+                    <h2 className='text-center mt-3'>Update Employee</h2>
                     <div className='card-body'>
-                        <form>
-                            <div className='form-group mb-2'>
-
+                        <form onSubmit={editEmployee}>
+                            {/* First Name */}
+                            <div className='mb-3'>
                                 <label className='form-label'>First Name</label>
                                 <input type="text" className={`form-control ${errors.firstName ? 'is-invalid' : ''}`}
-                                    placeholder='Enter first name here' name='firstName'
-                                    value={firstName} onChange={(e) => setFirstName(e.target.value)}></input>
+                                    value={firstName} onChange={e => setFirstName(e.target.value)} />
                                 {errors.firstName && <div className='invalid-feedback'>{errors.firstName}</div>}
+                            </div>
 
+                            {/* Last Name */}
+                            <div className='mb-3'>
                                 <label className='form-label'>Last Name</label>
                                 <input type="text" className={`form-control ${errors.lastName ? 'is-invalid' : ''}`}
-                                    placeholder='Enter last name here' name='lastName'
-                                    value={lastName} onChange={(e) => setLastName(e.target.value)}></input>
+                                    value={lastName} onChange={e => setLastName(e.target.value)} />
                                 {errors.lastName && <div className='invalid-feedback'>{errors.lastName}</div>}
+                            </div>
 
+                            {/* Email */}
+                            <div className='mb-3'>
                                 <label className='form-label'>Email</label>
-                                <input type="text" className={`form-control ${errors.email ? 'is-invalid' : ''}`}
-                                    placeholder='Enter email here' name='email'
-                                    value={email} onChange={(e) => setEmail(e.target.value)}></input>
+                                <input type="email" className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                                    value={email} onChange={e => setEmail(e.target.value)} />
                                 {errors.email && <div className='invalid-feedback'>{errors.email}</div>}
+                            </div>
 
+                            {/* Salary */}
+                            <div className='mb-3'>
                                 <label className='form-label'>Salary</label>
                                 <input type="number" className={`form-control ${errors.salary ? 'is-invalid' : ''}`}
-                                    placeholder='Enter salary here' name='salary'
-                                    value={salary} onChange={(e) => setSalary(e.target.value)}></input>
+                                    value={salary} onChange={e => setSalary(e.target.value)} />
                                 {errors.salary && <div className='invalid-feedback'>{errors.salary}</div>}
                             </div>
-                            <button type="submit" className='btn btn-success' onClick={editEmployee}>Update</button>
 
-
+                            <div className='text-center'>
+                                <button type="submit" className='btn btn-success px-5'>Update</button>
+                            </div>
                         </form>
-
                     </div>
-
                 </div>
-
             </div>
-
         </div>
     )
 }
 
-export default UpdateEmployee
+export default UpdateEmployee;
